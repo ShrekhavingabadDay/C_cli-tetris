@@ -7,19 +7,25 @@
 
 #define W 10
 #define H 18
-#define T 3
+#define T 4
+#define tn 4
 
-typedef int Tetromino[T*sizeof(int)][T*sizeof(int)];
+typedef struct Tetromino{
+
+    int points[T*T*sizeof(int)];
+    int offset[2*sizeof(int)];
+
+} Tetromino;
 
 void display_board(int board[H][W]);
 
-void move_tetromino(Tetromino* t, Tetromino* pieces[], int board[H][W], int* x, signed int* y, int* prev_tx, signed int* prev_ty);
+void move_tetromino(Tetromino** t, Tetromino* pieces[], int board[H][W], int* x, signed int* y, int* prev_tx, signed int* prev_ty, int* t_index);
 
 void get_input(int* tx, int* ty, int ch);
 
 void add_tetromino(Tetromino* piece, int board[H][W], int* tx, signed int* ty);
 
-void remove_old(int board[H][W], int tx, signed int ty);
+void remove_old(Tetromino* piece, int board[H][W], int tx, signed int ty);
 
 int is_reserved(int board[H][W], int x, int y, int v);
 
@@ -27,3 +33,4 @@ int can_move(Tetromino* piece, int board[H][W], int* tx, int* ty);
 
 int landed(Tetromino* piece, int board[H][W], int* tx, signed int* ty);
 
+int rotate(int px, int py, int r);
