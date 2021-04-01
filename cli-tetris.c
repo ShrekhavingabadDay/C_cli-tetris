@@ -1,7 +1,8 @@
+
 #include "cli-tetris.h"
 
-int prev_rotation = 1;
-int rotation = 1;
+int prev_rotation = 0;
+int rotation = 0;
 
 int main(){
 
@@ -50,8 +51,28 @@ int main(){
         {1,1,1,1}
     };
 
+    Tetromino s = {
+        {
+            0,0,0,0,
+            0,0,0,0,
+            0,0,1,1,
+            0,1,1,0
+        },
+        {1,0,0,2}
+    };
+
+    Tetromino z = {
+        {
+            0,0,0,0,
+            0,0,0,0,
+            1,1,0,0,
+            0,1,1,0
+        },
+        {0,0,1,2}
+    };
+
 	// put them into an array to be able to choose one randomly	
-	Tetromino* pieces[] = {&i, &t, &l, &o};
+	Tetromino* pieces[] = {&s, &z, &l, &o, &i, &t};
 	
 	// store 'em in a variable
 	Tetromino* piece;
@@ -129,7 +150,7 @@ void get_input(int* tx, int* ty, int ch){
 
         case KEY_UP:
             prev_rotation = rotation;
-            rotation = (rotation <= 3 ? rotation+1 : 0);
+            rotation = (rotation <= 2 ? rotation+1 : 0);
             return;
 			
 		default:
@@ -141,7 +162,9 @@ void get_input(int* tx, int* ty, int ch){
 // returns false if any of the positions is forbidden
 int can_move(Tetromino* piece, int board[H][W], int* tx, signed int* ty){
 
-	if ( ((*tx)+(piece->offset[0+rotation])+1) == 0 || (*tx)+(T-1) == W-1 || (*ty)+(T-1) == H-1) return 0;
+    // epicest border collision-detection ever
+	if ( ((*tx)+1+(piece->offset[rotation])) == 0 || (*tx)+T-1-(piece->offset[r_offset(rotation)]) == W-1 
+    || (*ty)+T-1-(piece->offset[bottom_offset(rotation)]) == H-1) return 0;
 
 	for (int i = 0; i<T; i++){
 		for (int j = 0; j<T; j++){
@@ -160,6 +183,29 @@ int can_move(Tetromino* piece, int board[H][W], int* tx, signed int* ty){
 	return 1;
 }
 
+int can_move_sideways(Tetromino* piece, int board[H][W], int *tx, signed int* ty, int *prev_tx){
+ 
+	if ( ((*tx)+1+(piece->offset[rotation])) == 0 || (*tx)+T-1-(piece->offset[r_offset(rotation)]) == W-1 ) return 0;
+
+	for (int i = 0; i<T; i++){
+		for (int j = 0; j<T; j++){
+			
+            int prev_x = j+(*prev_tx);
+			int x = j+(*tx);
+			int y = i+(*ty);
+			
+            int ti = rotate(j, i, rotation);
+
+			int value = (piece->points)[ti];
+			
+			if (value && board[y][x]) return 0; //&& !(board[y][prev_x]) ) return 0;
+		}
+	}
+	
+	return 1;   
+}
+
+
 // removes tetrominos old instance from board array
 void remove_old(Tetromino* piece, int board[H][W], int tx, signed int ty){
 	for (int i = 0; i<T; i++){
@@ -173,29 +219,38 @@ void remove_old(Tetromino* piece, int board[H][W], int tx, signed int ty){
 			if((piece->points)[ti]) board[y][x] = 0;
 		}
 	}
-    prev_rotation = rotation;
+    // prev_rotation = rotation;
 }
 
 // puts tetromino in place
 void move_tetromino(Tetromino** piece, Tetromino* pieces[], int board[H][W], int* tx, int* ty, int* prev_tx, signed int* prev_ty, int* t_index){
 
-	remove_old(*piece, board, *prev_tx, *prev_ty);
-	
-	if (can_move(*piece, board, tx, ty)){
+    int moved_sideways = ( ((*tx) - (*prev_tx)) != 0 );
+    int rotated = (prev_rotation != rotation);
+
+    remove_old(*piece, board, *prev_tx, *prev_ty);
 		
+	if (can_move(*piece, board, tx, ty)){
+        
 		add_tetromino(*piece, board, tx, ty);
 		
 		*prev_tx = *tx;
 		*prev_ty = *ty;
+
+        prev_rotation = rotation;
 		
 	}else{
-		
+        
+        if (rotated) rotation = prev_rotation;
+
+        if (moved_sideways && !(can_move_sideways(*piece, board, tx, ty, prev_ty)) ) *tx = *prev_tx;
+        
 		if (landed(*piece, board, tx, ty)){
-		
+
 			// draw it, then reset position values
 			add_tetromino(*piece, board, tx, prev_ty);
 			
-			//choose random tetromino from list
+			// choose random tetromino from list
 			*t_index = rand() % tn;
 			*piece = pieces[(*t_index)];
 
@@ -210,9 +265,9 @@ void move_tetromino(Tetromino** piece, Tetromino* pieces[], int board[H][W], int
 			
 		}
 		else{
-		
-			*tx = *prev_tx;
-			
+		    
+            *tx = *prev_tx;
+	
 			add_tetromino(*piece, board, tx, ty);
 			
 			*prev_ty = *ty;
@@ -274,14 +329,14 @@ void display_board(int board[H][W]){
 
 int landed(Tetromino* piece, int board[H][W], int* tx, signed int* ty){
 	
-	if ( ((*ty)+2) == (H-1) ) return 1;
+	if ( (*ty)+T-1-(piece->offset[bottom_offset(rotation)]) == H-1 ) return 1;
 
     for (int i = 0; i<T; i++){
         for (int j = 0; j<T; j++){
 
             int ti = rotate(j, i, rotation);
 
-            if ( (piece->points)[ti] && board[(*ty)+i+1][(*tx)+j]) return 1;
+            if ( (piece->points)[ti] && board[ (*ty) + i ][ (*tx) + j ] ) return 1;
         }
     }	
 	
@@ -299,4 +354,24 @@ int rotate(int px, int py, int r){
     }
     return 0;
 
+}
+
+int r_offset(int r){
+    switch (r){
+        case 0: return 2;
+        case 1: return 3;
+        case 2: return 0;
+        case 3: return 1;
+    }
+    return 0;
+}
+
+int bottom_offset(int r){
+    switch (r){
+        case 0: return 1;
+        case 1: return 2;
+        case 2: return 3;
+        case 3: return 0;
+    }
+    return 0;
 }
