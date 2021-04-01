@@ -3,4 +3,6 @@ Unix terminal based tetris game with ncurses written in C.
 
 # Compilation
 
-Compile with: gcc -o <name_of_executable> cli-tetris.c -lncurses
+Compile with: `gcc -o <name_of_executable> cli-tetris.c -lncurses`
+
+or use `make`
