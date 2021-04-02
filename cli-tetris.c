@@ -1,5 +1,7 @@
-// TODO: -clear tetris
-//       -count points
+// TODO: -colors and prettier output
+//       -multithreading?
+//       -game over screen
+//       -Q exits the game
 
 
 #include "cli-tetris.h"
