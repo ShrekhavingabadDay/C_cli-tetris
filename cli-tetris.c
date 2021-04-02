@@ -1,5 +1,10 @@
+// TODO: -clear tetris
+//       -count points
+
 
 #include "cli-tetris.h"
+
+int gameover = 0;
 
 int prev_rotation = 0;
 int rotation = 0;
@@ -72,7 +77,7 @@ int main(){
     };
 
 	// put them into an array to be able to choose one randomly	
-	Tetromino* pieces[] = {&s, &z, &l, &o, &i, &t};
+	Tetromino* pieces[] = {&o, &z, &l, &s, &i, &t};
 	
 	// store 'em in a variable
 	Tetromino* piece;
@@ -94,6 +99,7 @@ int main(){
 	int prev_tx = 2;
 	signed int prev_ty = -3;
 
+   
 	// initialize ncurses
 	initscr();
   	cbreak();
@@ -104,7 +110,7 @@ int main(){
   	  	
 	piece = pieces[t_index];
   	
-  	while (1) {
+  	while (!gameover) {
 
 	  	clear();
 	
@@ -119,16 +125,59 @@ int main(){
 		display_board(board);
 	
 		refresh();
-		
+
 		usleep(DELAY);
 	
 	}
+
+    clear();
 	
 	// restore terminal state
 	endwin();
 	
 	return 0;
 
+}
+
+int got_tetris(int board[H][W]){
+
+    int tetris = 1;
+
+    for (int i=0; i<H; i++){
+        for (int j=0; j<W; j++){
+            if (!board[i][j]) {
+                tetris = 0;
+                break;
+            } 
+        }
+        if (tetris) return 1;
+        tetris = 1;
+    }
+    return 0;
+
+}
+
+void clean_tetris(int board[H][W]){
+    int tetris = 1;
+
+    for (int i=0; i<H; i++){
+        for (int j=0; j<W; j++){
+            if (!board[i][j]) {
+                tetris = 0;
+                break;
+            } 
+        }
+        if (tetris) {
+            // move the stuff down by one row
+            for (int k=0; k<W; k++)
+                for (int l=i-1; l>-1; l--)
+                    board[l+1][k] = board[l][k];
+            
+        }
+
+        tetris = 1;
+
+    }
 }
 
 // get input
@@ -163,7 +212,7 @@ void get_input(int* tx, int* ty, int ch){
 int can_move(Tetromino* piece, int board[H][W], int* tx, signed int* ty){
 
     // epicest border collision-detection ever
-	if ( ((*tx)+1+(piece->offset[rotation])) == 0 || (*tx)+T-1-(piece->offset[r_offset(rotation)]) == W-1 
+	if ( ((*tx)+1+(piece->offset[rotation])) == 0 || (*tx)+T-2-(piece->offset[r_offset(rotation)]) == W-1 
     || (*ty)+T-1-(piece->offset[bottom_offset(rotation)]) == H-1) return 0;
 
 	for (int i = 0; i<T; i++){
@@ -185,7 +234,7 @@ int can_move(Tetromino* piece, int board[H][W], int* tx, signed int* ty){
 
 int can_move_sideways(Tetromino* piece, int board[H][W], int *tx, signed int* ty, int *prev_tx){
  
-	if ( ((*tx)+1+(piece->offset[rotation])) == 0 || (*tx)+T-1-(piece->offset[r_offset(rotation)]) == W-1 ) return 0;
+	if ( ((*tx)+1+(piece->offset[rotation])) == 0 || (*tx)+T-2-(piece->offset[r_offset(rotation)]) == W-1 ) return 0;
 
 	for (int i = 0; i<T; i++){
 		for (int j = 0; j<T; j++){
@@ -250,6 +299,14 @@ void move_tetromino(Tetromino** piece, Tetromino* pieces[], int board[H][W], int
 			// draw it, then reset position values
 			add_tetromino(*piece, board, tx, prev_ty);
 			
+            // check if we reached the top -> if yes, game over
+            for (int i=0; i<W; i++)
+                if (board[0][i]) {gameover = 1; return;}
+
+
+            // check if we got any tetrises
+            if (got_tetris(board)) clean_tetris(board);
+
 			// choose random tetromino from list
 			*t_index = rand() % tn;
 			*piece = pieces[(*t_index)];
@@ -299,7 +356,7 @@ void add_tetromino(Tetromino* piece, int board[H][W], int* tx, signed int* ty){
 void display_board(int board[H][W]){
 
 	// add top border
-	for (int i = 1; i<W+1; i++){
+	for (int i = 1; i<W+2; i++){
 		mvaddch(0, i, '-');
 	}
 	
@@ -317,11 +374,11 @@ void display_board(int board[H][W]){
 		}
 		
 		// add right border
-		mvaddch(i, W, '|');
+		mvaddch(i, W+1, '|');
 	}
 	
 	// add bottom border
-	for (int i = 0; i<W+1; i++){
+	for (int i = 0; i<W+2; i++){
 		mvaddch(H, i, '-');
 	}
 	

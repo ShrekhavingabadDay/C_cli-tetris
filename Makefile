@@ -1,10 +1,12 @@
+name=tetris
+
 default: build
 
 build:
-	gcc -o tetris cli-tetris.c -lncurses
+	gcc -o $(name) cli-tetris.c -lncurses
 
-build-test:
-	gcc -o test cli-tetris.c -lncurses
+install:
+	sudo cp $(name) /usr/bin/ 
 
-clean:
-	rm tetris
+uninstall:
+	sudo rm /usr/bin/$(name)

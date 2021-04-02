@@ -8,7 +8,7 @@
 #define W 10
 #define H 18
 #define T 4
-#define tn 4
+#define tn 6
 
 typedef struct Tetromino{
 
@@ -27,10 +27,20 @@ void add_tetromino(Tetromino* piece, int board[H][W], int* tx, signed int* ty);
 
 void remove_old(Tetromino* piece, int board[H][W], int tx, signed int ty);
 
+void clean_tetris(int board[H][W]);
+
 int is_reserved(int board[H][W], int x, int y, int v);
 
 int can_move(Tetromino* piece, int board[H][W], int* tx, int* ty);
 
+int can_move_sideways(Tetromino* piece, int board[H][W], int* tx, int* ty, int* prev_tx);
+
 int landed(Tetromino* piece, int board[H][W], int* tx, signed int* ty);
 
 int rotate(int px, int py, int r);
+
+int r_offset(int r);
+
+int bottom_offset(int r);
+
+int got_tetris(int board[H][W]);
