@@ -240,6 +240,10 @@ void get_input(int* tx, int* ty, int ch){
             prev_rotation = rotation;
             rotation = (rotation <= 2 ? rotation+1 : 0);
             return;
+
+        case 'q':
+            gameover=1;
+            return;
 			
 		default:
 			return;
@@ -385,7 +389,7 @@ void add_tetromino(Tetromino* piece, int board[H][W], int* tx, signed int* ty){
 
 			int value = (piece->points)[ti];
 			
-            if (value) board[y][x] = value;
+            if (value>0) board[y][x] = value;
 			
 		}
 	}
@@ -409,9 +413,17 @@ int ghost_coords(int* x, int* y, int* tx, int* ty, Tetromino* piece, int board[H
 void draw_ghost(Tetromino* piece, int x, int y, int x_offset, int y_offset){
     for (int i=0; i<T; i++){
         for (int j=0; j<T; j++){
-            int ti = rotate(j, i, prev_rotation);
-            
-            if ((piece->points)[ti]>0) mvaddch(y_offset+y+i, x_offset+x+j, '#');
+        	
+			int nx = j+x;
+			int ny = i+y;
+			
+            int ti = rotate(j, i, rotation);
+
+			int value = (piece->points)[ti];
+		    
+            if (value>0) mvaddch(y_offset+ny,//+(piece->offset[r_offset(rotation)]), 
+                                 x_offset+nx+1,//+(piece->offset[bottom_offset(rotation)]), 
+                                 '#');
         }
     }
 }
