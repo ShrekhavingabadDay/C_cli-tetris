@@ -2,6 +2,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 
 #define DELAY 100000
 
@@ -17,7 +18,7 @@ typedef struct Tetromino{
 
 } Tetromino;
 
-void display_board(int board[H][W]);
+void display_board(int board[H][W], int x, int y);
 
 void move_tetromino(Tetromino** t, Tetromino* pieces[], int board[H][W], int* x, signed int* y, int* prev_tx, signed int* prev_ty, int* t_index);
 

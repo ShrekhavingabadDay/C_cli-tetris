@@ -6,6 +6,8 @@
 
 #include "cli-tetris.h"
 
+int colors = 1;
+
 int gameover = 0;
 
 int prev_rotation = 0;
@@ -31,19 +33,19 @@ int main(){
 	Tetromino l = {
         {
             0,0,0,0,
-		    0,0,0,1,
-		    0,0,0,1,
-		    0,0,1,1
+		    0,0,0,2,
+		    0,0,0,2,
+		    0,0,2,2
 	    },
         {2,0,0,1}
     };
 	
 	Tetromino i = {
         {
-            0,0,0,1,
-		    0,0,0,1,
-		    0,0,0,1,
-		    0,0,0,1
+            0,0,0,3,
+		    0,0,0,3,
+		    0,0,0,3,
+		    0,0,0,3
 	    },
         {3,0,0,0}
     };
@@ -51,8 +53,8 @@ int main(){
 	Tetromino o = {
         {
             0,0,0,0,
-		    0,1,1,0,
-		    0,1,1,0,
+		    0,4,4,0,
+		    0,4,4,0,
 		    0,0,0,0
 	    },
         {1,1,1,1}
@@ -62,8 +64,8 @@ int main(){
         {
             0,0,0,0,
             0,0,0,0,
-            0,0,1,1,
-            0,1,1,0
+            0,0,5,5,
+            0,5,5,0
         },
         {1,0,0,2}
     };
@@ -72,8 +74,8 @@ int main(){
         {
             0,0,0,0,
             0,0,0,0,
-            1,1,0,0,
-            0,1,1,0
+            6,6,0,0,
+            0,6,6,0
         },
         {0,0,1,2}
     };
@@ -87,6 +89,7 @@ int main(){
 	// initialize them boards
 	int board[H][W];
 
+    // a.k.a. tetromino index
     int t_index = 0;
 
 	for (int i = 0; i<H; i++)
@@ -109,6 +112,29 @@ int main(){
   	keypad(stdscr, TRUE);
   	curs_set(0);
   	nodelay(stdscr, 1);
+  
+    //get terminal sizes
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+
+    // assign values to positions that will allow us to draw the board in the middle of the screen
+    int x_offset = (w.ws_col / 2) - (W / 2);
+    int y_offset = (w.ws_row / 2) - (H / 2);
+ 
+    // check for colors, initialize them
+    if (!has_colors){
+        colors = 0;
+    }
+    else{
+        use_default_colors();
+        start_color();
+        init_pair(1, COLOR_RED, -1);
+        init_pair(2, COLOR_BLUE, -1);
+        init_pair(3, COLOR_YELLOW, -1);
+        init_pair(4, COLOR_GREEN, -1);
+        init_pair(5, COLOR_MAGENTA, -1);
+        init_pair(6, COLOR_CYAN, -1);
+    }
   	  	
 	piece = pieces[t_index];
   	
@@ -124,7 +150,7 @@ int main(){
 	  	
 	  	move_tetromino(&piece, pieces, board, &tx, &ty, &prev_tx, &prev_ty, &t_index);
 		
-		display_board(board);
+		display_board(board, x_offset, y_offset);
 	
 		refresh();
 
@@ -147,7 +173,7 @@ int got_tetris(int board[H][W]){
 
     for (int i=0; i<H; i++){
         for (int j=0; j<W; j++){
-            if (!board[i][j]) {
+            if (board[i][j]==0) {
                 tetris = 0;
                 break;
             } 
@@ -164,7 +190,7 @@ void clean_tetris(int board[H][W]){
 
     for (int i=0; i<H; i++){
         for (int j=0; j<W; j++){
-            if (!board[i][j]) {
+            if (board[i][j]==0) {
                 tetris = 0;
                 break;
             } 
@@ -227,7 +253,7 @@ int can_move(Tetromino* piece, int board[H][W], int* tx, signed int* ty){
 
 			int value = (piece->points)[ti];
 			
-			if (value && board[y][x]) return 0;
+			if (value && (board[y][x]>0) ) return 0;
 		}
 	}
 	
@@ -249,7 +275,7 @@ int can_move_sideways(Tetromino* piece, int board[H][W], int *tx, signed int* ty
 
 			int value = (piece->points)[ti];
 			
-			if (value && board[y][x]) return 0; //&& !(board[y][prev_x]) ) return 0;
+			if (value && (board[y][x]>0)) return 0; //&& !(board[y][prev_x]) ) return 0;
 		}
 	}
 	
@@ -303,7 +329,7 @@ void move_tetromino(Tetromino** piece, Tetromino* pieces[], int board[H][W], int
 			
             // check if we reached the top -> if yes, game over
             for (int i=0; i<W; i++)
-                if (board[0][i]) {gameover = 1; return;}
+                if (board[0][i]>0) {gameover = 1; return;}
 
 
             // check if we got any tetrises
@@ -355,33 +381,35 @@ void add_tetromino(Tetromino* piece, int board[H][W], int* tx, signed int* ty){
 }
 
 // such ASCII
-void display_board(int board[H][W]){
+void display_board(int board[H][W], int x, int y){
 
 	// add top border
 	for (int i = 1; i<W+2; i++){
-		mvaddch(0, i, '-');
+		mvaddch(y, x+i, '-');
 	}
 	
 	for (int i = 0; i<H; i++){
 	
 		// add left border
-		mvaddch(i, 0, '|');
+		mvaddch(y+i, x, '|');
 	
 		for (int j=0; j<W; j++){
 			
 			char c = board[i][j] ? '#' : ' ';
-			
-			mvaddch(i+1, j+1, c);	
+		
+            if (colors)	attron(COLOR_PAIR(board[i][j]));
+			mvaddch(y+i+1, x+j+1, c);
+            if (colors) attroff(COLOR_PAIR(board[i][j]));	
 			
 		}
 		
 		// add right border
-		mvaddch(i, W+1, '|');
+		mvaddch(y+i, W+1+x, '|');
 	}
 	
 	// add bottom border
 	for (int i = 0; i<W+2; i++){
-		mvaddch(H, i, '-');
+		mvaddch(y+H, x+i, '-');
 	}
 	
 }
@@ -395,7 +423,7 @@ int landed(Tetromino* piece, int board[H][W], int* tx, signed int* ty){
 
             int ti = rotate(j, i, rotation);
 
-            if ( (piece->points)[ti] && board[ (*ty) + i ][ (*tx) + j ] ) return 1;
+            if ( (piece->points)[ti] && (board[(*ty) + i][(*tx) + j]>0) ) return 1;
         }
     }	
 	
