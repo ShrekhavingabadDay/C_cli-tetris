@@ -1,5 +1,4 @@
-// TODO: -colors and prettier output
-//       -multithreading?
+// TODO: -show where piece will land
 //       -game over screen
 //       -Q exits the game
 
@@ -104,7 +103,10 @@ int main(){
 	int prev_tx = 2;
 	signed int prev_ty = -3;
 
-   
+ 
+    int ghost_x = 0;
+    int ghost_y = 0;
+  
 	// initialize ncurses
 	initscr();
   	cbreak();
@@ -134,10 +136,15 @@ int main(){
         init_pair(4, COLOR_GREEN, -1);
         init_pair(5, COLOR_MAGENTA, -1);
         init_pair(6, COLOR_CYAN, -1);
+        init_pair(7, COLOR_WHITE, -1);
     }
   	  	
 	piece = pieces[t_index];
-  	
+    
+    // determines if we need the ghost or not
+    int need_ghost;
+
+    // main gameloop  	
   	while (!gameover) {
 
 	  	clear();
@@ -151,6 +158,10 @@ int main(){
 	  	move_tetromino(&piece, pieces, board, &tx, &ty, &prev_tx, &prev_ty, &t_index);
 		
 		display_board(board, x_offset, y_offset);
+
+        need_ghost = ghost_coords(&ghost_x, &ghost_y, &tx, &ty, piece, board);
+
+        if (need_ghost) draw_ghost(piece, ghost_x, ghost_y, x_offset, y_offset);
 	
 		refresh();
 
@@ -356,9 +367,10 @@ void move_tetromino(Tetromino** piece, Tetromino* pieces[], int board[H][W], int
 			add_tetromino(*piece, board, tx, ty);
 			
 			*prev_ty = *ty;
-			
+		
 		}	
 	}
+       
 }
 
 void add_tetromino(Tetromino* piece, int board[H][W], int* tx, signed int* ty){
@@ -380,6 +392,30 @@ void add_tetromino(Tetromino* piece, int board[H][W], int* tx, signed int* ty){
 
 }
 
+// sets the coordinates of the ghost and returns one if we can draw it
+int ghost_coords(int* x, int* y, int* tx, int* ty, Tetromino* piece, int board[H][W]){
+
+    *x = (*tx);
+    *y = (*ty)+T;
+
+    while (!landed(piece, board, x, y) && (*y)<H-T) (*y)++; 
+
+    if ( ((*y)-(*ty)) <= T ) return 0;
+
+    return 1;
+
+}
+
+void draw_ghost(Tetromino* piece, int x, int y, int x_offset, int y_offset){
+    for (int i=0; i<T; i++){
+        for (int j=0; j<T; j++){
+            int ti = rotate(j, i, prev_rotation);
+            
+            if ((piece->points)[ti]>0) mvaddch(y_offset+y+i, x_offset+x+j, '#');
+        }
+    }
+}
+
 // such ASCII
 void display_board(int board[H][W], int x, int y){
 
@@ -395,11 +431,13 @@ void display_board(int board[H][W], int x, int y){
 	
 		for (int j=0; j<W; j++){
 			
-			char c = board[i][j] ? '#' : ' ';
+		    char c = board[i][j] ? '0' : ' ';
 		
-            if (colors)	attron(COLOR_PAIR(board[i][j]));
-			mvaddch(y+i+1, x+j+1, c);
-            if (colors) attroff(COLOR_PAIR(board[i][j]));	
+            if (colors)	{
+                attron(COLOR_PAIR(board[i][j]));
+			    mvaddch(y+i+1, x+j+1, c);
+                attroff(COLOR_PAIR(board[i][j]));}
+            else mvaddch(y+i+1, x+j+1, c);	
 			
 		}
 		
@@ -423,7 +461,7 @@ int landed(Tetromino* piece, int board[H][W], int* tx, signed int* ty){
 
             int ti = rotate(j, i, rotation);
 
-            if ( (piece->points)[ti] && (board[(*ty) + i][(*tx) + j]>0) ) return 1;
+            if ( (piece->points)[ti]>0 && (board[(*ty) + i][(*tx) + j]>0) ) return 1;
         }
     }	
 	

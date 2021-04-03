@@ -20,6 +20,8 @@ typedef struct Tetromino{
 
 void display_board(int board[H][W], int x, int y);
 
+void draw_ghost(Tetromino* piece, int x, int y, int x_offset, int y_offset);
+
 void move_tetromino(Tetromino** t, Tetromino* pieces[], int board[H][W], int* x, signed int* y, int* prev_tx, signed int* prev_ty, int* t_index);
 
 void get_input(int* tx, int* ty, int ch);
@@ -29,6 +31,8 @@ void add_tetromino(Tetromino* piece, int board[H][W], int* tx, signed int* ty);
 void remove_old(Tetromino* piece, int board[H][W], int tx, signed int ty);
 
 void clean_tetris(int board[H][W]);
+
+int ghost_coords(int* x, int* y, int* tx, int* ty, Tetromino* piece, int board[H][W]);
 
 int is_reserved(int board[H][W], int x, int y, int v);
 

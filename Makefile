@@ -2,6 +2,9 @@ name=tetris
 
 default: build
 
+debug:
+	gcc -o test cli-tetris.c -lncurses && ./test
+
 build:
 	gcc -o $(name) cli-tetris.c -lncurses
 
