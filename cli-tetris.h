@@ -18,6 +18,8 @@ typedef struct Tetromino{
 
 } Tetromino;
 
+void reset_game(int board[H][W], int* tx, int* ty);
+
 void display_board(int board[H][W], int x, int y);
 
 void draw_ghost(Tetromino* piece, int x, int y, int x_offset, int y_offset);

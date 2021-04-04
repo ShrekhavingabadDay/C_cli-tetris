@@ -1,6 +1,5 @@
-// TODO: -show where piece will land
+// TODO: -show points
 //       -game over screen
-//       -Q exits the game
 
 
 #include "cli-tetris.h"
@@ -89,7 +88,7 @@ int main(){
 	int board[H][W];
 
     // a.k.a. tetromino index
-    int t_index = 0;
+    int t_index = rand() % tn;
 
 	for (int i = 0; i<H; i++)
 		for (int j = 0; j<W; j++)
@@ -144,7 +143,10 @@ int main(){
     // determines if we need the ghost or not
     int need_ghost;
 
-    // main gameloop  	
+    int quit = 0;
+
+    // main gameloop
+    while (!quit){  	
   	while (!gameover) {
 
 	  	clear();
@@ -170,11 +172,43 @@ int main(){
 	}
 
     clear();
+
+    printw("Game Over :(\nDo you want to quit the game?[y/n]");
+
+    nodelay(stdscr, 0);
+
+    int c = getch();
+
+    switch(c){
+        case 'q':
+            quit = 1;
+            break;
+        case 'y':
+            quit = 1;
+            break;
+        default:
+            gameover = 0;
+            reset_game(board, &tx, &ty);
+            nodelay(stdscr, 1);
+            break;
+    }
+
+    }
 	
 	// restore terminal state
 	endwin();
 	
 	return 0;
+
+}
+
+void reset_game(int board[H][W], int* tx, int* ty){
+    for (int i=0; i<H; i++)
+        for (int j=0; j<W; j++)
+            board[i][j] = 0;
+
+    *tx = 3;
+    *ty = 0;
 
 }
 
