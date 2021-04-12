@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <sys/ioctl.h>
 
-#define DELAY 180000
+#define DELAY 100000
 
 #define W 10
 #define H 18

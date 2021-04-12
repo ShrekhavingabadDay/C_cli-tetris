@@ -150,11 +150,16 @@ int main(){
 
     // main gameloop
     // nested while loops -> we can continue playing after losing
+
+    // this lets us "asynchronously" move the piece down and take input
+    int framecount = 0;
+
     while (!quit){  	
   	while (!gameover) {
 
 	  	clear();
-		ty++;
+
+        if (framecount == 4) { ty++; framecount = 0;};
 		
 		int ch = getch();
 	  	
@@ -169,6 +174,8 @@ int main(){
         if (need_ghost) draw_ghost(piece, ghost_x, ghost_y, x_offset, y_offset);
 	
 		refresh();
+        
+        framecount++;
 
 		usleep(DELAY);
 	
@@ -176,7 +183,7 @@ int main(){
 
     clear();
     
-
+    // this is from https://patorjk.com/software/taag/
     printw("    ___                         ___\n");                  
     printw("   / _ \\__ _ _ __ ___   ___    /___\\__   _____ _ __\n");  
     printw("  / /_\\/ _` | '_ ` _ \\ / _ \\  //  //\\ \\ / / _ \\ '__|\n"); 
