@@ -9,5 +9,5 @@ Unix terminal based tetris game with ncurses written in C.
 
 Compile with: `gcc -o name_of_executable cli-tetris.c -lncurses`
 
-or use `make name=the_name_for_this_program_your_heart_desires`
+or use `make name=whatever_you_want`
 
