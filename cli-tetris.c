@@ -1,10 +1,13 @@
-// TODO: -show points
-//       -game over screen
+// TODO: -hard drop 
 
 
 #include "cli-tetris.h"
 
+int scores[4] = {40, 100, 300, 1200};
+
 int colors = 1;
+
+int score = 0;
 
 int gameover = 0;
 
@@ -21,31 +24,31 @@ int main(){
 	Tetromino t = {
         {
             0,0,0,0,
-		    0,0,0,0,
-		    0,0,1,0,
-		    0,1,1,1
+		    0,1,0,0,
+		    1,1,1,0,
+		    0,0,0,0
 	    },
-        {1,0,0,2}
+        {0,1,1,1}
     };
 	
 	Tetromino l = {
         {
             0,0,0,0,
-		    0,0,0,2,
-		    0,0,0,2,
-		    0,0,2,2
+		    0,0,2,0,
+		    0,0,2,0,
+		    0,2,2,0
 	    },
-        {2,0,0,1}
+        {1,0,1,1}
     };
 	
 	Tetromino i = {
         {
-            0,0,0,3,
-		    0,0,0,3,
-		    0,0,0,3,
-		    0,0,0,3
+            0,0,3,0,
+		    0,0,3,0,
+		    0,0,3,0,
+		    0,0,3,0
 	    },
-        {3,0,0,0}
+        {2,0,1,0}
     };
 	
 	Tetromino o = {
@@ -61,21 +64,21 @@ int main(){
     Tetromino s = {
         {
             0,0,0,0,
-            0,0,0,0,
-            0,0,5,5,
-            0,5,5,0
+            0,5,5,0,
+            5,5,0,0,
+            0,0,0,0
         },
-        {1,0,0,2}
+        {0,1,1,1}
     };
 
     Tetromino z = {
         {
             0,0,0,0,
-            0,0,0,0,
             6,6,0,0,
-            0,6,6,0
+            0,6,6,0,
+            0,0,0,0
         },
-        {0,0,1,2}
+        {0,1,1,1}
     };
 
 	// put them into an array to be able to choose one randomly	
@@ -129,34 +132,34 @@ int main(){
     else{
         use_default_colors();
         start_color();
-        init_pair(1, COLOR_RED, -1);
-        init_pair(2, COLOR_BLUE, -1);
-        init_pair(3, COLOR_YELLOW, -1);
-        init_pair(4, COLOR_GREEN, -1);
-        init_pair(5, COLOR_MAGENTA, -1);
-        init_pair(6, COLOR_CYAN, -1);
-        init_pair(7, COLOR_WHITE, -1);
+        init_pair(1, COLOR_RED, COLOR_RED);
+        init_pair(2, COLOR_BLUE, COLOR_BLUE);
+        init_pair(3, COLOR_YELLOW, COLOR_YELLOW);
+        init_pair(4, COLOR_GREEN, COLOR_GREEN);
+        init_pair(5, COLOR_MAGENTA, COLOR_MAGENTA);
+        init_pair(6, COLOR_CYAN, COLOR_CYAN);
+        init_pair(7, COLOR_WHITE, COLOR_WHITE);
     }
   	  	
 	piece = pieces[t_index];
     
-    // determines if we need the ghost or not
+    // determines if we can draw the ghost or not
     int need_ghost;
 
     int quit = 0;
 
     // main gameloop
+    // nested while loops -> we can continue playing after losing
     while (!quit){  	
   	while (!gameover) {
 
 	  	clear();
-	
 		ty++;
 		
 		int ch = getch();
 	  	
-		get_input(&tx, &ty, ch);
-	  	
+	  	get_input(piece, board, &tx, &ty, ch);
+
 	  	move_tetromino(&piece, pieces, board, &tx, &ty, &prev_tx, &prev_ty, &t_index);
 		
 		display_board(board, x_offset, y_offset);
@@ -172,8 +175,17 @@ int main(){
 	}
 
     clear();
+    
 
-    printw("Game Over :(\nDo you want to quit the game?[y/n]");
+    printw("    ___                         ___\n");                  
+    printw("   / _ \\__ _ _ __ ___   ___    /___\\__   _____ _ __\n");  
+    printw("  / /_\\/ _` | '_ ` _ \\ / _ \\  //  //\\ \\ / / _ \\ '__|\n"); 
+    printw(" / /_\\\\ (_| | | | | | |  __/ / \\_//  \\ V /  __/ |\n");    
+    printw(" \\____/\\__,_|_| |_| |_|\\___| \\___/    \\_/ \\___|_|\n");
+
+    printw("Your score was: %d", score);
+
+    printw("\nDo you want to quit the game?[y/n]");
 
     nodelay(stdscr, 0);
 
@@ -202,6 +214,7 @@ int main(){
 
 }
 
+
 void reset_game(int board[H][W], int* tx, int* ty){
     for (int i=0; i<H; i++)
         for (int j=0; j<W; j++)
@@ -209,6 +222,8 @@ void reset_game(int board[H][W], int* tx, int* ty){
 
     *tx = 3;
     *ty = 0;
+
+    score = 0;
 
 }
 
@@ -233,6 +248,8 @@ int got_tetris(int board[H][W]){
 void clean_tetris(int board[H][W]){
     int tetris = 1;
 
+    int count = 0;
+
     for (int i=0; i<H; i++){
         for (int j=0; j<W; j++){
             if (board[i][j]==0) {
@@ -241,6 +258,7 @@ void clean_tetris(int board[H][W]){
             } 
         }
         if (tetris) {
+            count++;
             // move the stuff down by one row
             for (int k=0; k<W; k++)
                 for (int l=i-1; l>-1; l--)
@@ -251,10 +269,15 @@ void clean_tetris(int board[H][W]){
         tetris = 1;
 
     }
+
+    score += scores[count-1];
+
+    
+
 }
 
 // get input
-void get_input(int* tx, int* ty, int ch){
+void get_input(Tetromino* piece, int board[H][W], int* tx, int* ty, int ch){
 
 	switch (ch){
 	
@@ -267,7 +290,7 @@ void get_input(int* tx, int* ty, int ch){
 			return;
 		
 		case KEY_DOWN:
-			(*ty)++;
+            (*ty)++;
 			return;
 
         case KEY_UP:
@@ -302,7 +325,7 @@ int can_move(Tetromino* piece, int board[H][W], int* tx, signed int* ty){
 
 			int value = (piece->points)[ti];
 			
-			if (value && (board[y][x]>0) ) return 0;
+			if (value && board[y][x]>0 ) return 0;
 		}
 	}
 	
@@ -354,8 +377,8 @@ void move_tetromino(Tetromino** piece, Tetromino* pieces[], int board[H][W], int
     int moved_sideways = ( ((*tx) - (*prev_tx)) != 0 );
     int rotated = (prev_rotation != rotation);
 
-    remove_old(*piece, board, *prev_tx, *prev_ty);
-		
+    remove_old(*piece, board, *prev_tx, *prev_ty);	
+
 	if (can_move(*piece, board, tx, ty)){
         
 		add_tetromino(*piece, board, tx, ty);
@@ -370,10 +393,17 @@ void move_tetromino(Tetromino** piece, Tetromino* pieces[], int board[H][W], int
         if (rotated) rotation = prev_rotation;
 
         if (moved_sideways && !(can_move_sideways(*piece, board, tx, ty, prev_ty)) ) *tx = *prev_tx;
-        
-		if (landed(*piece, board, tx, ty)){
 
-			// draw it, then reset position values
+       
+		if (landed(*piece, board, tx, ty)){
+            
+            // if DOWN arrow key was pressed right before the piece landed, that could stop it in the air if this wasn't here
+            if ((*ty)-(*prev_ty) == 2) *prev_ty = (*ty)-1;     
+
+            // but htet causes another problem which is solved with this line
+            if (landed(*piece, board, tx, prev_ty)) *prev_ty = (*ty)-2; 
+
+           	// draw it, then reset position values
 			add_tetromino(*piece, board, tx, prev_ty);
 			
             // check if we reached the top -> if yes, game over
@@ -430,14 +460,15 @@ void add_tetromino(Tetromino* piece, int board[H][W], int* tx, signed int* ty){
 
 }
 
-// sets the coordinates of the ghost and returns one if we can draw it
+// sets the coordinates of the ghost and returns 1 if we can draw it
 int ghost_coords(int* x, int* y, int* tx, int* ty, Tetromino* piece, int board[H][W]){
 
     *x = (*tx);
-    *y = (*ty)+T;
+    (*y) = ( (*ty) + T - ( piece->offset[bottom_offset(rotation)] ) );
 
-    while (!landed(piece, board, x, y) && (*y)<H-T) (*y)++; 
+    while (!landed(piece, board, x, y) && (*y)<(H-T+(piece->offset[bottom_offset(rotation)])) ) (*y)++; 
 
+    // don't draw the ghost, if it collides with the piece
     if ( ((*y)-(*ty)) <= T ) return 0;
 
     return 1;
@@ -495,6 +526,9 @@ void display_board(int board[H][W], int x, int y){
 	for (int i = 0; i<W+2; i++){
 		mvaddch(y+H, x+i, '-');
 	}
+
+    // show score
+    mvprintw(0, y, "SCORE: %d", score);
 	
 }
 
@@ -503,13 +537,14 @@ int landed(Tetromino* piece, int board[H][W], int* tx, signed int* ty){
 	if ( (*ty)+T-1-(piece->offset[bottom_offset(rotation)]) == H-1 ) return 1;
 
     for (int i = 0; i<T; i++){
-        for (int j = 0; j<T; j++){
+        for (int j = 0; j<T; j++){        
+    
+        int ti = rotate(i, j, rotation);
 
-            int ti = rotate(j, i, rotation);
+        // checking if we still collide with anything
+        if ( (piece->points)[ti]>0 && (board[(*ty) + j][(*tx) + i]>0) ) return 1;
 
-            if ( (piece->points)[ti]>0 && (board[(*ty) + i][(*tx) + j]>0) ) return 1;
-        }
-    }	
+    }}
 	
 	return 0;
 	

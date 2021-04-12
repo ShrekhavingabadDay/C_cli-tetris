@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <sys/ioctl.h>
 
-#define DELAY 100000
+#define DELAY 180000
 
 #define W 10
 #define H 18
@@ -14,7 +14,7 @@
 typedef struct Tetromino{
 
     int points[T*T*sizeof(int)];
-    int offset[2*sizeof(int)];
+    int offset[4*sizeof(int)];
 
 } Tetromino;
 
@@ -26,7 +26,7 @@ void draw_ghost(Tetromino* piece, int x, int y, int x_offset, int y_offset);
 
 void move_tetromino(Tetromino** t, Tetromino* pieces[], int board[H][W], int* x, signed int* y, int* prev_tx, signed int* prev_ty, int* t_index);
 
-void get_input(int* tx, int* ty, int ch);
+void get_input(Tetromino* piece, int board[H][W], int* tx, int* ty, int ch);
 
 void add_tetromino(Tetromino* piece, int board[H][W], int* tx, signed int* ty);
 
