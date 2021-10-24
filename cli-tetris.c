@@ -126,7 +126,7 @@ int main(){
     int y_offset = (w.ws_row / 2) - (H / 2);
  
     // check for colors, initialize them
-    if (!has_colors){
+    if (!has_colors()){
         colors = 0;
     }
     else{
